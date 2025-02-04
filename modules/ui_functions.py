@@ -225,6 +225,9 @@ class UIFunctions(MainWindow):
             self.setWindowFlags(Qt.FramelessWindowHint)
             self.setAttribute(Qt.WA_TranslucentBackground)
 
+            # INITIALIZE DRAG POS
+            self.dragPos = None
+
             # MOVE WINDOW / MAXIMIZE / RESTORE
             def moveWindow(event):
                 # IF MAXIMIZED CHANGE TO NORMAL
@@ -232,12 +235,27 @@ class UIFunctions(MainWindow):
                     UIFunctions.maximize_restore(self)
                 # MOVE WINDOW
                 if event.buttons() == Qt.LeftButton:
-                    pos = event.pos()
-                    globalPos = self.mapToGlobal(pos)
-                    self.move(self.pos() + globalPos - self.dragPos)
-                    self.dragPos = globalPos
+                    if self.dragPos is None:
+                        self.dragPos = event.globalPos()
+                    self.move(self.pos() + event.globalPos() - self.dragPos)
+                    self.dragPos = event.globalPos()
                     event.accept()
+                else:
+                    self.dragPos = None
+            # MOUSE RELEASE EVENT
+            def releaseMouse(event):
+                self.dragPos = None
+                event.accept()
+
+            # MOUSE PRESS EVENT
+            def mousePressEvent(event):
+                if event.button() == Qt.LeftButton:
+                    self.dragPos = event.globalPos()
+                    event.accept()
+
+            self.ui.titleRightInfo.mousePressEvent = mousePressEvent
             self.ui.titleRightInfo.mouseMoveEvent = moveWindow
+            self.ui.titleRightInfo.mouseReleaseEvent = releaseMouse
 
             # CUSTOM GRIPS
             self.left_grip = CustomGrip(self, Qt.LeftEdge, True)
