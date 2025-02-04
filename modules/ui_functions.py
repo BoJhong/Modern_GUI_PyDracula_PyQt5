@@ -113,7 +113,7 @@ class UIFunctions(MainWindow):
                 widthExtended = standard
                 # RESET BTN
                 self.ui.toggleLeftBox.setStyleSheet(style.replace(color, ''))
-                
+
         UIFunctions.start_box_animation(self, width, widthRightBox, "left")
 
     # TOGGLE RIGHT BOX
@@ -147,7 +147,7 @@ class UIFunctions(MainWindow):
 
     def start_box_animation(self, left_box_width, right_box_width, direction):
         right_width = 0
-        left_width = 0 
+        left_width = 0
 
         # Check values
         if left_box_width == 0 and direction == "left":
@@ -158,16 +158,16 @@ class UIFunctions(MainWindow):
         if right_box_width == 0 and direction == "right":
             right_width = 240
         else:
-            right_width = 0       
+            right_width = 0
 
-        # ANIMATION LEFT BOX        
+        # ANIMATION LEFT BOX
         self.left_box = QPropertyAnimation(self.ui.extraLeftBox, b"minimumWidth")
         self.left_box.setDuration(Settings.TIME_ANIMATION)
         self.left_box.setStartValue(left_box_width)
         self.left_box.setEndValue(left_width)
         self.left_box.setEasingCurve(QEasingCurve.InOutQuart)
 
-        # ANIMATION RIGHT BOX        
+        # ANIMATION RIGHT BOX
         self.right_box = QPropertyAnimation(self.ui.extraRightBox, b"minimumWidth")
         self.right_box.setDuration(Settings.TIME_ANIMATION)
         self.right_box.setStartValue(right_box_width)
@@ -232,8 +232,10 @@ class UIFunctions(MainWindow):
                     UIFunctions.maximize_restore(self)
                 # MOVE WINDOW
                 if event.buttons() == Qt.LeftButton:
-                    self.move(self.pos() + event.globalPos() - self.dragPos)
-                    self.dragPos = event.globalPos()
+                    pos = event.pos()
+                    globalPos = self.mapToGlobal(pos)
+                    self.move(self.pos() + globalPos - self.dragPos)
+                    self.dragPos = globalPos
                     event.accept()
             self.ui.titleRightInfo.mouseMoveEvent = moveWindow
 

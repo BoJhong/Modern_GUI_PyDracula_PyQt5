@@ -18,7 +18,8 @@ setup(
     version = "1.0",
     description = "Modern GUI for Python applications",
     author = "Wanderson M. Pimenta",
-    options = {'build_exe' : {'include_files' : files}},
+    options = {'build_exe' : {'include_files' : files,
+                             'packages': ['PyQt5'],
+                             'includes': ['PyQt5.QtCore', 'PyQt5.QtGui', 'PyQt5.QtWidgets']}},
     executables = [target]
-    
 )
