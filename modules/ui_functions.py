@@ -230,15 +230,31 @@ class UIFunctions(MainWindow):
 
             # MOVE WINDOW / MAXIMIZE / RESTORE
             def moveWindow(event):
-                # IF MAXIMIZED CHANGE TO NORMAL
-                if UIFunctions.returStatus(self):
-                    UIFunctions.maximize_restore(self)
-                # MOVE WINDOW
+                # MOVE WINDOW WITH LEFT BUTTON
                 if event.buttons() == Qt.LeftButton:
-                    if self.dragPos is None:
+                    # CHECK IF MAXIMIZED
+                    if UIFunctions.returStatus(self):
+                        # GET RELATIVE POSITION
+                        rel_pos = event.pos()
+                        # GET WIDTH RATIO
+                        ratio = rel_pos.x() / self.width()
+                        # RESTORE WINDOW
+                        UIFunctions.maximize_restore(self)
+                        # UPDATE WINDOW
+                        self.repaint()
+                        # SET NEW POSITION
+                        new_x = event.globalPos().x() - (self.width() * ratio)
+                        new_y = event.globalPos().y() - rel_pos.y()
+                        # MOVE WINDOW TO NEW POSITION
+                        self.move(int(new_x), int(new_y))
+                        # UPDATE DRAG POSITION
                         self.dragPos = event.globalPos()
-                    self.move(self.pos() + event.globalPos() - self.dragPos)
-                    self.dragPos = event.globalPos()
+                    else:
+                        # MOVE WINDOW IN NORMAL STATE
+                        if self.dragPos is None:
+                            self.dragPos = event.globalPos()
+                        self.move(self.pos() + event.globalPos() - self.dragPos)
+                        self.dragPos = event.globalPos()
                     event.accept()
                 else:
                     self.dragPos = None
