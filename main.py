@@ -25,6 +25,7 @@ from PyQt5.QtGui import *
 # ///////////////////////////////////////////////////////////////
 from modules import *
 from widgets import *
+from widgets.sliding_stacked_widgets import SlidingStackedWidget
 os.environ["QT_FONT_DPI"] = "96" # FIX Problem for High DPI and Scale above 100%
 
 # SET AS GLOBAL WIDGETS
@@ -108,6 +109,13 @@ class MainWindow(QMainWindow):
         widgets.stackedWidget.setCurrentWidget(widgets.home)
         widgets.btn_home.setStyleSheet(UIFunctions.selectMenu(widgets.btn_home.styleSheet()))
 
+        # CONFIGURE SLIDING STACKED WIDGET
+        # ///////////////////////////////////////////////////////////////
+        # Configure continuous animation effects
+        widgets.stackedWidget.setSpeed(120)  # Set to faster 120ms for quick response
+        widgets.stackedWidget.setAnimation(QEasingCurve.Linear)  # Use Linear curve to avoid acceleration/deceleration delay
+        widgets.stackedWidget.setDirection(Qt.Vertical)  # Set horizontal slide direction
+
 
     # BUTTONS CLICK
     # Post here your functions for clicked buttons
@@ -119,19 +127,19 @@ class MainWindow(QMainWindow):
 
         # SHOW HOME PAGE
         if btnName == "btn_home":
-            widgets.stackedWidget.setCurrentWidget(widgets.home)
+            widgets.stackedWidget.slideInWgt(widgets.home)
             UIFunctions.resetStyle(self, btnName)
             btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))
 
         # SHOW WIDGETS PAGE
         if btnName == "btn_widgets":
-            widgets.stackedWidget.setCurrentWidget(widgets.widgets)
+            widgets.stackedWidget.slideInWgt(widgets.widgets)
             UIFunctions.resetStyle(self, btnName)
             btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet()))
 
         # SHOW NEW PAGE
         if btnName == "btn_new":
-            widgets.stackedWidget.setCurrentWidget(widgets.new_page) # SET PAGE
+            widgets.stackedWidget.slideInWgt(widgets.new_page) # SET PAGE
             UIFunctions.resetStyle(self, btnName) # RESET ANOTHERS BUTTONS SELECTED
             btn.setStyleSheet(UIFunctions.selectMenu(btn.styleSheet())) # SELECT MENU
 

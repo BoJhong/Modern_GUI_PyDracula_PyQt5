@@ -9,6 +9,7 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from widgets.sliding_stacked_widgets import SlidingStackedWidget
 
 
 class Ui_MainWindow(object):
@@ -53,14 +54,14 @@ class Ui_MainWindow(object):
 "\n"
 "/* /////////////////////////////////////////////////////////////////////////////////////////////////\n"
 "Bg App */\n"
-"#bgApp {    \n"
+"#bgApp {\n"
 "    background-color: rgb(40, 44, 52);\n"
 "    border: 1px solid rgb(44, 49, 58);\n"
 "}\n"
 "\n"
 "/* /////////////////////////////////////////////////////////////////////////////////////////////////\n"
 "Left Menu */\n"
-"#leftMenuBg {    \n"
+"#leftMenuBg {\n"
 "    background-color: rgb(33, 37, 43);\n"
 "}\n"
 "#topLogo {\n"
@@ -73,7 +74,7 @@ class Ui_MainWindow(object):
 "#titleLeftDescription { font: 8pt \"Segoe UI\"; color: rgb(189, 147, 249); }\n"
 "\n"
 "/* MENUS */\n"
-"#topMenu .QPushButton {    \n"
+"#topMenu .QPushButton {\n"
 "    background-position: left center;\n"
 "    background-repeat: no-repeat;\n"
 "    border: none;\n"
@@ -85,11 +86,11 @@ class Ui_MainWindow(object):
 "#topMenu .QPushButton:hover {\n"
 "    background-color: rgb(40, 44, 52);\n"
 "}\n"
-"#topMenu .QPushButton:pressed {    \n"
+"#topMenu .QPushButton:pressed {\n"
 "    background-color: rgb(189, 147, 249);\n"
 "    color: rgb(255, 255, 255);\n"
 "}\n"
-"#bottomMenu .QPushButton {    \n"
+"#bottomMenu .QPushButton {\n"
 "    background-position: left center;\n"
 "    background-repeat: no-repeat;\n"
 "    border: none;\n"
@@ -101,7 +102,7 @@ class Ui_MainWindow(object):
 "#bottomMenu .QPushButton:hover {\n"
 "    background-color: rgb(40, 44, 52);\n"
 "}\n"
-"#bottomMenu .QPushButton:pressed {    \n"
+"#bottomMenu .QPushButton:pressed {\n"
 "    background-color: rgb(189, 147, 249);\n"
 "    color: rgb(255, 255, 255);\n"
 "}\n"
@@ -133,10 +134,10 @@ class Ui_MainWindow(object):
 "\n"
 "/* /////////////////////////////////////////////////////////////////////////////////////////////////\n"
 "Extra Tab */\n"
-"#extraLeftBox {    \n"
+"#extraLeftBox {\n"
 "    background-color: rgb(44, 49, 58);\n"
 "}\n"
-"#extraTopBg{    \n"
+"#extraTopBg{\n"
 "    background-color: rgb(189, 147, 249)\n"
 "}\n"
 "\n"
@@ -173,14 +174,14 @@ class Ui_MainWindow(object):
 "#extraTopMenu .QPushButton:hover {\n"
 "    background-color: rgb(40, 44, 52);\n"
 "}\n"
-"#extraTopMenu .QPushButton:pressed {    \n"
+"#extraTopMenu .QPushButton:pressed {\n"
 "    background-color: rgb(189, 147, 249);\n"
 "    color: rgb(255, 255, 255);\n"
 "}\n"
 "\n"
 "/* /////////////////////////////////////////////////////////////////////////////////////////////////\n"
 "Content App */\n"
-"#contentTopBg{    \n"
+"#contentTopBg{\n"
 "    background-color: rgb(33, 37, 43);\n"
 "}\n"
 "#contentBottom{\n"
@@ -202,7 +203,7 @@ class Ui_MainWindow(object):
 "\n"
 "/* CONTENT SETTINGS */\n"
 "/* MENUS */\n"
-"#contentSettings .QPushButton {    \n"
+"#contentSettings .QPushButton {\n"
 "    background-position: left center;\n"
 "    background-repeat: no-repeat;\n"
 "    border: none;\n"
@@ -214,14 +215,14 @@ class Ui_MainWindow(object):
 "#contentSettings .QPushButton:hover {\n"
 "    background-color: rgb(40, 44, 52);\n"
 "}\n"
-"#contentSettings .QPushButton:pressed {    \n"
+"#contentSettings .QPushButton:pressed {\n"
 "    background-color: rgb(189, 147, 249);\n"
 "    color: rgb(255, 255, 255);\n"
 "}\n"
 "\n"
 "/* /////////////////////////////////////////////////////////////////////////////////////////////////\n"
 "QTableWidget */\n"
-"QTableWidget {    \n"
+"QTableWidget {\n"
 "    background-color: transparent;\n"
 "    padding: 10px;\n"
 "    border-radius: 5px;\n"
@@ -245,7 +246,7 @@ class Ui_MainWindow(object):
 "    border-bottom: 1px solid rgb(44, 49, 60);\n"
 "    border-right: 1px solid rgb(44, 49, 60);\n"
 "}\n"
-"QTableWidget::horizontalHeader {    \n"
+"QTableWidget::horizontalHeader {\n"
 "    background-color: rgb(33, 37, 43);\n"
 "}\n"
 "QHeaderView::section:horizontal\n"
@@ -347,7 +348,7 @@ class Ui_MainWindow(object):
 "    margin: 21px 0 21px 0;\n"
 "    border-radius: 0px;\n"
 " }\n"
-" QScrollBar::handle:vertical {    \n"
+" QScrollBar::handle:vertical {\n"
 "    background: rgb(189, 147, 249);\n"
 "    min-height: 25px;\n"
 "    border-radius: 4px\n"
@@ -392,7 +393,7 @@ class Ui_MainWindow(object):
 "}\n"
 "QCheckBox::indicator:checked {\n"
 "    background: 3px solid rgb(52, 59, 72);\n"
-"    border: 3px solid rgb(52, 59, 72);    \n"
+"    border: 3px solid rgb(52, 59, 72);\n"
 "    background-image: url(:/icons/images/icons/cil-check-alt.png);\n"
 "}\n"
 "\n"
@@ -410,7 +411,7 @@ class Ui_MainWindow(object):
 "}\n"
 "QRadioButton::indicator:checked {\n"
 "    background: 3px solid rgb(94, 106, 130);\n"
-"    border: 3px solid rgb(52, 59, 72);    \n"
+"    border: 3px solid rgb(52, 59, 72);\n"
 "}\n"
 "\n"
 "/* /////////////////////////////////////////////////////////////////////////////////////////////////\n"
@@ -428,18 +429,18 @@ class Ui_MainWindow(object):
 "QComboBox::drop-down {\n"
 "    subcontrol-origin: padding;\n"
 "    subcontrol-position: top right;\n"
-"    width: 25px; \n"
+"    width: 25px;\n"
 "    border-left-width: 3px;\n"
 "    border-left-color: rgba(39, 44, 54, 150);\n"
 "    border-left-style: solid;\n"
 "    border-top-right-radius: 3px;\n"
-"    border-bottom-right-radius: 3px;    \n"
+"    border-bottom-right-radius: 3px;\n"
 "    background-image: url(:/icons/images/icons/cil-arrow-bottom.png);\n"
 "    background-position: center;\n"
 "    background-repeat: no-reperat;\n"
 " }\n"
 "QComboBox QAbstractItemView {\n"
-"    color: rgb(255, 121, 198);    \n"
+"    color: rgb(255, 121, 198);\n"
 "    background-color: rgb(33, 37, 43);\n"
 "    padding: 10px;\n"
 "    selection-background-color: rgb(39, 44, 54);\n"
@@ -497,17 +498,17 @@ class Ui_MainWindow(object):
 "\n"
 "/* /////////////////////////////////////////////////////////////////////////////////////////////////\n"
 "CommandLinkButton */\n"
-"QCommandLinkButton {    \n"
+"QCommandLinkButton {\n"
 "    color: rgb(255, 121, 198);\n"
 "    border-radius: 5px;\n"
 "    padding: 5px;\n"
 "    color: rgb(255, 170, 255);\n"
 "}\n"
-"QCommandLinkButton:hover {    \n"
+"QCommandLinkButton:hover {\n"
 "    color: rgb(255, 170, 255);\n"
 "    background-color: rgb(44, 49, 60);\n"
 "}\n"
-"QCommandLinkButton:pressed {    \n"
+"QCommandLinkButton:pressed {\n"
 "    color: rgb(189, 147, 249);\n"
 "    background-color: rgb(52, 58, 71);\n"
 "}\n"
@@ -516,14 +517,14 @@ class Ui_MainWindow(object):
 "Button */\n"
 "#pagesContainer QPushButton {\n"
 "    border: 2px solid rgb(52, 59, 72);\n"
-"    border-radius: 5px;    \n"
+"    border-radius: 5px;\n"
 "    background-color: rgb(52, 59, 72);\n"
 "}\n"
 "#pagesContainer QPushButton:hover {\n"
 "    background-color: rgb(57, 65, 80);\n"
 "    border: 2px solid rgb(61, 70, 86);\n"
 "}\n"
-"#pagesContainer QPushButton:pressed {    \n"
+"#pagesContainer QPushButton:pressed {\n"
 "    background-color: rgb(35, 40, 49);\n"
 "    border: 2px solid rgb(43, 50, 61);\n"
 "}\n"
@@ -1026,7 +1027,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_15.setContentsMargins(10, 10, 10, 10)
         self.verticalLayout_15.setSpacing(0)
         self.verticalLayout_15.setObjectName("verticalLayout_15")
-        self.stackedWidget = QtWidgets.QStackedWidget(self.pagesContainer)
+        self.stackedWidget = SlidingStackedWidget(self.pagesContainer)
         self.stackedWidget.setStyleSheet("background: transparent;")
         self.stackedWidget.setObjectName("stackedWidget")
         self.home = QtWidgets.QWidget()
@@ -1488,7 +1489,7 @@ class Ui_MainWindow(object):
         self.creditsLabel.setMaximumSize(QtCore.QSize(16777215, 16))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
-        font.setPointSize(10)
+        font.setPointSize(-1)
         font.setBold(False)
         font.setItalic(False)
         self.creditsLabel.setFont(font)
@@ -1619,4 +1620,4 @@ class Ui_MainWindow(object):
         self.btn_logout.setText(_translate("MainWindow", "Logout"))
         self.creditsLabel.setText(_translate("MainWindow", "By: Wanderson M. Pimenta"))
         self.version.setText(_translate("MainWindow", "v1.0.3"))
-from . import resources_rc
+from modules import resources_rc
