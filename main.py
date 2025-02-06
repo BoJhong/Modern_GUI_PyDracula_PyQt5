@@ -112,9 +112,9 @@ class MainWindow(QMainWindow):
         # CONFIGURE SLIDING STACKED WIDGET
         # ///////////////////////////////////////////////////////////////
         # Configure sliding transitions
-        widgets.stackedWidget.setSpeed(300)  # 適中的動畫速度
-        widgets.stackedWidget.setAnimation(QEasingCurve.InOutQuart)  # 更流暢的加速減速效果
-        widgets.stackedWidget.setDirection(Qt.Horizontal)  # 水平滑動
+        widgets.stackedWidget.setSpeed(300)  # Set animation duration to 300ms
+        widgets.stackedWidget.setAnimation(QEasingCurve.InOutQuart)  # Set animation curve
+        widgets.stackedWidget.setDirection(Qt.Horizontal)  # Set horizontal slide direction
 
 
     # BUTTONS CLICK

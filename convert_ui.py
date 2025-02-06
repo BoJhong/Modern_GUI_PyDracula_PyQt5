@@ -88,9 +88,3 @@ if __name__ == "__main__":
                 f.write(content)
 
             print("File modification completed.")
-
-            # Reminder for animation settings in main program
-            print("\nPlease add the following code in your main program to set up page transition animations:")
-            print("self.ui.stackedWidget.setSpeed(120)  # Set animation duration to 120ms")
-            print("self.ui.stackedWidget.setAnimation(QtCore.QEasingCurve.Linear)  # Set animation curve")
-            print("self.ui.stackedWidget.setDirection(QtCore.Qt.Horizontal)  # Set horizontal slide direction")
