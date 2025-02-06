@@ -7,29 +7,31 @@ class SlidingStackedWidget(QStackedWidget):
         super(SlidingStackedWidget, self).__init__(parent)
 
         # Initialize parameters
-        self.m_direction = Qt.Horizontal
-        self.m_speed = 500
-        self.m_animationtype = QEasingCurve.OutCubic
-        self.m_now = 0
-        self.m_next = 0
-        self.m_wrap = False
-        self.m_pnow = QPoint(0, 0)
-        self.m_active = False
+        self.animation_direction = Qt.Horizontal
+        self.animation_speed = 500
+        self.animation_curve = QEasingCurve.OutCubic
+        self.enable_wrap = False
 
-        # Animation queue management
-        self.animation_queue = []
-        self.current_animation = None
+        # State tracking
+        self.current_index = 0
+        self.next_index = 0
+        self.is_animating = False
+        self.target_index = None
+
+        # Animation group and transition tracking
+        self.animation_group = None
+        self.active_transition_indices = set()
 
     @pyqtSlot()
     def slideInNext(self):
         now = self.currentIndex()
-        if self.m_wrap or now < (self.count() - 1):
+        if self.enable_wrap or now < (self.count() - 1):
             self.slideInIdx(now + 1)
 
     @pyqtSlot()
     def slideInPrev(self):
         now = self.currentIndex()
-        if self.m_wrap or now > 0:
+        if self.enable_wrap or now > 0:
             self.slideInIdx(now - 1)
 
     def slideInIdx(self, idx):
@@ -40,185 +42,287 @@ class SlidingStackedWidget(QStackedWidget):
         self.slideInWgt(self.widget(idx))
 
     def slideInWgt(self, newwidget):
-        _now = self.currentIndex()
-        _next = self.indexOf(newwidget)
-
-        if _now == _next:
+        # Get widget indices
+        target_index = self.indexOf(newwidget)
+        if target_index == -1:
             return
 
-        # Create new transition animation
-        transition = {
-            'now': _now,
-            'next': _next,
-            'positions': {},
-            'widgets': {
-                'now': self.widget(_now),
-                'next': self.widget(_next)
-            }
-        }
+        # Skip if trying to animate to the widget that is currently being animated to
+        # This prevents animation conflicts when the same target is requested multiple times
+        if target_index == self.next_index:
+            return
 
-        # Save current page positions
-        transition['positions']['now'] = self.widget(_now).pos()
-        transition['positions']['next'] = self.widget(_next).pos()
+        # Store the target and ensure it's visible
+        self.target_index = target_index
 
-        # Start new animation if no animation is running
-        if not self.m_active:
-            self._startAnimation(transition)
-        else:
-            # Clear existing queue and jump directly to the last requested page
-            self.animation_queue.clear()
-            # Create transition from current animation target to final destination
-            new_transition = {
-                'now': self.current_animation['next'],
-                'next': _next,
-                'positions': {},
-                'widgets': {
-                    'now': self.widget(self.current_animation['next']),
-                    'next': self.widget(_next)
-                }
-            }
-            self.animation_queue.append(new_transition)
+        # Handle ongoing animation
+        if self.is_animating:
+            # Wait for current animation to finish
+            return
 
-            # Ensure all relevant pages are visible
-            for i in range(self.count()):
-                widget = self.widget(i)
-                if i in [self.m_now, self.m_next, _next]:
-                    widget.show()
-                else:
-                    widget.hide()
+        # Start new transition
+        current_idx = self.currentIndex()
+        self._prepareTransition(current_idx, target_index)
+        self._startAnimation()
 
-    def _startAnimation(self, transition):
-        """Start a new transition animation"""
-        # Save current state
-        self.m_next = transition['next']
-        self.m_now = transition['now']
-        self.m_active = True
+    def _prepareTransition(self, current_idx, next_idx):
+        """Prepare widgets for transition"""
+        self.current_index = current_idx
+        self.next_index = next_idx
 
-        # Set initial layout
-        offsetx, offsety = self.frameRect().width(), self.frameRect().height()
-        transition['widgets']['next'].setGeometry(self.frameRect())
+        # Get widgets
+        current_widget = self.widget(current_idx)
+        next_widget = self.widget(next_idx)
 
-        # Calculate offset
-        if not self.m_direction == Qt.Horizontal:
-            if self.m_now < self.m_next:
-                offsetx, offsety = 0, -offsety
+        # Setup geometry
+        rect = self.frameRect()
+        next_widget.setGeometry(rect)
+
+        # Calculate movement direction
+        is_forward = current_idx < next_idx
+
+        # Set initial widget positions
+        if self.animation_direction == Qt.Horizontal:
+            if is_forward:
+                next_widget.move(rect.topLeft() + QPoint(rect.width(), 0))
             else:
-                offsetx = 0
+                next_widget.move(rect.topLeft() + QPoint(-rect.width(), 0))
         else:
-            if self.m_now < self.m_next:
-                offsetx, offsety = -offsetx, 0
+            if is_forward:
+                next_widget.move(rect.topLeft() + QPoint(0, rect.height()))
             else:
-                offsety = 0
+                next_widget.move(rect.topLeft() + QPoint(0, -rect.height()))
 
-        # Update and save latest page positions
-        current_frame = self.frameRect()
-        transition['positions']['next'] = current_frame.topLeft()
+        # Save direction for animation
+        self._is_forward = is_forward
 
-        # Set current page position (if transitioning from queue)
-        if hasattr(self, 'current_animation') and self.current_animation:
-            transition['positions']['now'] = self.current_animation['widgets']['next'].pos()
-        else:
-            transition['positions']['now'] = current_frame.topLeft()
+        # Update tracking
+        self.active_transition_indices = {current_idx, next_idx}
 
-        # Calculate offset position
-        offset = QPoint(offsetx, offsety)
-
-        # Set initial page states
-        transition['widgets']['now'].raise_()
-        transition['widgets']['next'].setGeometry(current_frame)
-        transition['widgets']['next'].move(transition['positions']['next'] - offset)
-
-        # Ensure all relevant pages are visible and in correct positions
+        # Only update visibility for widgets involved in transition
         for i in range(self.count()):
             widget = self.widget(i)
-            if widget in [transition['widgets']['now'], transition['widgets']['next']]:
+            if i in self.active_transition_indices:
+                widget.show()
+                widget.raise_()
+            elif i == self.target_index:
+                # Keep last target visible but below current transition widgets
                 widget.show()
             else:
+                # Hide only widgets not involved in any way
                 widget.hide()
-                widget.move(current_frame.topLeft())
+
+    def _startAnimation(self):
+        """Start transition animation with enhanced state management"""
+        if self.animation_group is not None:
+            self._cleanupAnimation()
+
+        self.is_animating = True
+        current_widget = self.widget(self.current_index)
+        next_widget = self.widget(self.next_index)
+
+        # Ensure proper stacking order before animation
+        for i in range(self.count()):
+            widget = self.widget(i)
+            if widget == next_widget:
+                widget.raise_()
+            elif widget == current_widget:
+                widget.raise_()
+            elif i == self.target_index:
+                widget.lower()
 
         # Create animation group
-        anim_group = QParallelAnimationGroup(self)
-        anim_group.finished.connect(self.animationDoneSlot)
-        self.current_animation = transition
+        self.animation_group = QParallelAnimationGroup(self)
+        self.animation_group.finished.connect(self._onAnimationFinished)
 
-        # Add page animations
-        animations = [
-            (
-                transition['widgets']['now'],
-                transition['positions']['now'],
-                transition['positions']['now'] + offset
-            ),
-            (
-                transition['widgets']['next'],
-                transition['positions']['next'] - offset,
-                transition['positions']['next']
-            )
-        ]
+        # Create cleanup timer to ensure animation finishes
+        self._cleanup_timer = QTimer(self)
+        self._cleanup_timer.setSingleShot(True)
+        self._cleanup_timer.timeout.connect(self._forceFinishAnimation)
 
-        for widget, start, end in animations:
-            animation = QPropertyAnimation(
-                widget,
-                b"pos",
-                duration=self.m_speed,
-                easingCurve=self.m_animationtype,
-                startValue=start,
-                endValue=end,
-            )
-            anim_group.addAnimation(animation)
+        # Save widget states for animation validation
+        self.active_widgets = {current_widget, next_widget}
+        if self.target_index not in [self.current_index, self.next_index]:
+            last_widget = self.widget(self.target_index)
+            self.active_widgets.add(last_widget)
+            # Ensure last target stays visible
+            last_widget.show()
+            last_widget.lower()
 
-        # Start animation
-        anim_group.start(QAbstractAnimation.DeleteWhenStopped)
+        # Get movement direction and calculate positions
+        rect = self.frameRect()
+        if self.animation_direction == Qt.Horizontal:
+            offset = rect.width() if self._is_forward else -rect.width()
+            # Always slide in the same direction
+            if self._is_forward:
+                # Forward: current page slides left, new page slides in from right
+                current_end = QPoint(-rect.width(), 0)
+                next_start = QPoint(rect.width(), 0)
+            else:
+                # Backward: current page slides right, new page slides in from left
+                current_end = QPoint(rect.width(), 0)
+                next_start = QPoint(-rect.width(), 0)
+            next_end = QPoint(0, 0)
+        else:
+            if self._is_forward:
+                # Forward: current page slides up, new page slides in from bottom
+                current_end = QPoint(0, -rect.height())
+                next_start = QPoint(0, rect.height())
+            else:
+                # Backward: current page slides down, new page slides in from top
+                current_end = QPoint(0, rect.height())
+                next_start = QPoint(0, -rect.height())
+            next_end = QPoint(0, 0)
 
-    @pyqtSlot()
-    def animationDoneSlot(self):
-        """Handle animation completion and process queue"""
-        if not self.current_animation:
+        # 確保當前頁面在原點開始
+        current_widget.move(rect.topLeft())
+
+        # Create parallel group for synchronized movement
+        parallel_group = QParallelAnimationGroup()
+
+        # Create current page animation
+        current_anim = QPropertyAnimation(current_widget, b"pos", self)
+        current_anim.setDuration(self.animation_speed)
+        current_anim.setEasingCurve(self.animation_curve)
+        current_anim.setStartValue(current_widget.pos())
+        current_anim.setEndValue(rect.topLeft() + current_end)
+
+        # Create next page animation
+        next_anim = QPropertyAnimation(next_widget, b"pos", self)
+        next_anim.setDuration(self.animation_speed)
+        next_anim.setEasingCurve(self.animation_curve)
+        next_anim.setStartValue(next_start)
+        next_anim.setEndValue(rect.topLeft() + next_end)
+
+        # Add animations to group
+        parallel_group.addAnimation(current_anim)
+        parallel_group.addAnimation(next_anim)
+
+        # Add state validation
+        current_anim.valueChanged.connect(lambda: self._validateWidgetState(current_widget))
+        next_anim.valueChanged.connect(lambda: self._validateWidgetState(next_widget))
+
+        self.animation_group.addAnimation(parallel_group)
+        self.animation_group.start()
+
+    def _validateWidgetState(self, widget):
+        """Ensure proper widget state during animation"""
+        if not widget.isVisible() and widget in self.active_widgets:
+            widget.show()
+
+        # Maintain proper stacking order
+        if widget == self.widget(self.next_index):
+            widget.raise_()
+        elif widget == self.widget(self.current_index):
+            widget.raise_()
+        elif widget == self.widget(self.target_index):
+            widget.lower()  # Keep last target below current animation
+
+    def _cleanupAnimation(self):
+        """Clean up current animation"""
+        if self.animation_group is not None:
+            self.animation_group.stop()
+            self.animation_group = None
+
+        # Reset positions
+        rect = self.frameRect()
+        for idx in self.active_transition_indices:
+            widget = self.widget(idx)
+            widget.move(rect.topLeft())
+
+    def _onAnimationFinished(self):
+        """Handle animation completion"""
+        # Validate animation state
+        if not self.animation_group:
             return
 
-        # Set current page to target page
-        completed_transition = self.current_animation
-        self.setCurrentIndex(completed_transition['next'])
+        # Stop cleanup timer if running
+        if hasattr(self, '_cleanup_timer') and self._cleanup_timer.isActive():
+            self._cleanup_timer.stop()
 
-        # Reset completed animation page positions
-        completed_transition['widgets']['now'].move(completed_transition['positions']['now'])
-        completed_transition['widgets']['next'].move(completed_transition['positions']['next'])
+        # Stop current animation
+        self.animation_group.stop()
+        self.animation_group = None
 
-        # Set page visibility
-        completed_transition['widgets']['now'].hide()
-        completed_transition['widgets']['next'].show()
-        completed_transition['widgets']['next'].raise_()
+        # Get frame geometry
+        rect = self.frameRect()
 
-        # Clean up current animation
-        self.current_animation = None
+        # 獲取當前索引和目標
+        current_target = self.next_index
+        final_target = self.target_index
 
-        # Check for next animation in queue
-        if self.animation_queue:
-            # Get next animation
-            next_transition = self.animation_queue.pop(0)
-            # Start next animation
-            self._startAnimation(next_transition)
-        else:
-            # Reset state if no more animations
-            self.m_active = False
+        # Get current and target indices
+        self.current_index = current_target
+        self.setCurrentIndex(current_target)
 
-            # Ensure all pages are in correct state
+        # Reset widget positions
+        for widget in self.active_widgets:
+            widget.move(rect.topLeft())
+
+        # Check if further transitions are needed
+        if final_target is not None and final_target != current_target:
+            # Reset animation state
+            self.is_animating = False
+            self.active_widgets.clear()
+
+            # Keep related widgets visible and in proper order
             for i in range(self.count()):
                 widget = self.widget(i)
-                if i == self.m_next:
+                if i == current_target:
                     widget.show()
                     widget.raise_()
                 else:
                     widget.hide()
+                widget.move(rect.topLeft())
+
+            # Trigger next transition
+            QTimer.singleShot(0, lambda: self.slideInWgt(self.widget(final_target)))
+        else:
+            # Final target reached
+            self.is_animating = False
+            self.animation_group = None
+            self.target_index = None
+            self.active_widgets.clear()
+
+            # Update final widget states
+            for i in range(self.count()):
+                widget = self.widget(i)
+                if i == current_target:
+                    widget.show()
+                    widget.raise_()
+                else:
+                    widget.hide()
+                widget.move(rect.topLeft())
+
+    def _forceFinishAnimation(self):
+        """Force finish current animation and jump to final target"""
+        if self.is_animating and self.animation_group:
+            self.animation_group.stop()
+
+            # Show final target immediately
+            target_widget = self.widget(self.target_index)
+            target_widget.move(self.frameRect().topLeft())
+            target_widget.show()
+            target_widget.raise_()
+            self.setCurrentIndex(self.target_index)
+
+            # Hide all other widgets
+            for i in range(self.count()):
+                if i != self.target_index:
+                    self.widget(i).hide()
+
+            # Clear state
+            self.is_animating = False
+            self.animation_group = None
 
     def setDirection(self, direction):
-        self.m_direction = direction
+        self.animation_direction = direction
 
     def setSpeed(self, speed):
-        self.m_speed = speed
+        self.animation_speed = speed
 
     def setAnimation(self, animationtype):
-        self.m_animationtype = animationtype
+        self.animation_curve = animationtype
 
     def setWrap(self, wrap):
-        self.m_wrap = wrap
+        self.enable_wrap = wrap
